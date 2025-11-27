@@ -1,0 +1,276 @@
+# 系统架构设计
+
+## 总体架构概述
+
+智能文档生成工具采用基于 CrewAI 的多智能体架构，通过模块化设计实现高效的文档自动化生成。系统核心在于四个专业智能体的协同工作，每个智能体承担特定职责，共同完成从代码分析到文档输出的完整流程。
+
+## 系统组件架构
+
+### 核心模块组成
+```mermaid
+graph TB
+    A[输入层] --> B[核心处理层]
+    B --> C[输出层]
+    
+    A --> A1[GitHub URL]
+    A --> A2[配置参数]
+    
+    B --> B1[流程控制器]
+    B1 --> B2[分析模块]
+    B1 --> B3[生成模块]
+    B2 --> B4[代码探索专家]
+    B2 --> B5[文档规划师]
+    B3 --> B6[文档撰写专员]
+    B3 --> B7[质量评审专员]
+    
+    C --> C1[文档文件]
+    C --> C2[Mermaid图表]
+    C --> C3[状态报告]
+```
+
+## 智能体架构设计
+
+### 分析阶段智能体
+
+#### 代码探索专家
+**职责**: 深度分析代码库结构和架构
+
+**工作流程**:
+```mermaid
+sequenceDiagram
+    participant CE as 代码探索专家
+    participant Tools as 分析工具
+    participant Repo as 代码库
+    
+    CE->>Tools: 调用目录读取工具
+    Tools->>Repo: 扫描项目结构
+    Repo->>Tools: 返回文件信息
+    Tools->>CE: 提供分析数据
+    CE->>CE: 识别核心组件
+    CE->>CE: 分析架构模式
+    CE->>Next: 提交分析报告
+```
+
+**核心能力**:
+- 项目结构解析和模块识别
+- 代码依赖关系分析
+- 架构设计模式识别
+- 关键接口和抽象层发现
+
+#### 文档规划师
+**职责**: 基于分析结果制定文档策略
+
+**输入输出关系**:
+```mermaid
+graph LR
+    A[分析报告] --> B[文档规划师]
+    B --> C[用户需求分析]
+    B --> D[文档结构设计]
+    C --> E[文档计划]
+    D --> E
+    E --> F[任务分配]
+```
+
+### 生成阶段智能体
+
+#### 文档撰写专员
+**职责**: 根据文档计划生成具体内容
+
+**内容生成流程**:
+```mermaid
+graph TD
+    A[文档计划] --> B[内容大纲]
+    B --> C[技术内容撰写]
+    B --> D[流程图生成]
+    C --> E[代码示例提取]
+    D --> F[Mermaid代码]
+    E --> G[初版文档]
+    F --> G
+```
+
+**特色功能**:
+- 自动生成 Mermaid 流程图
+- 从代码库提取真实示例
+- 用户友好的语言表达
+- 技术准确的内容描述
+
+#### 质量评审专员
+**职责**: 确保文档质量和准确性
+
+**评审维度**:
+```mermaid
+graph LR
+    A[技术准确性] --> B[内容评审]
+    C[用户友好性] --> B
+    D[格式一致性] --> B
+    E[图表正确性] --> B
+    B --> F[质量评分]
+    F --> G[改进建议]
+    G --> H[最终文档]
+```
+
+## 数据流架构
+
+### 端到端数据流
+```mermaid
+flowchart TD
+    A[GitHub URL输入] --> B[仓库克隆]
+    B --> C[代码解析]
+    C --> D[结构数据]
+    D --> E[智能体分析]
+    E --> F[分析结果]
+    F --> G[文档规划]
+    G --> H[生成任务]
+    H --> I[内容生成]
+    I --> J[文档草稿]
+    J --> K[质量评审]
+    K --> L[最终文档]
+    L --> M[文件输出]
+```
+
+### 状态管理
+系统使用 Pydantic 模型进行状态管理：
+
+**核心状态模型**:
+```
+class DocumentationState:
+    project_url: str          # 项目URL
+    repo_path: Path          # 本地仓库路径
+    docs: List[str]          # 生成的文档列表
+    analysis_result: Dict    # 分析结果
+    plan: DocPlan           # 文档计划
+```
+
+## 配置管理系统
+
+### 分层配置架构
+```mermaid
+graph TB
+    A[基础配置] --> B[智能体配置]
+    A --> C[任务配置]
+    
+    B --> B1[角色定义]
+    B --> B2[目标设定]
+    B --> B3[背景故事]
+    
+    C --> C1[任务描述]
+    C --> C2[输出要求]
+    C --> C3[验证规则]
+    
+    B1 --> D[运行时行为]
+    C1 --> D
+```
+
+### 配置热重载
+- YAML 配置文件驱动智能体行为
+- 运行时配置加载和验证
+- 支持模式切换和参数调整
+
+## 工具集成架构
+
+### 工具系统设计
+**核心工具集**:
+```mermaid
+classDiagram
+    class DirectoryReadTool
+    class FileReadTool
+    class WebsiteSearchTool
+    
+    DirectoryReadTool : +read_directory()
+    FileReadTool : +read_file()
+    WebsiteSearchTool : +search()
+    
+    DirectoryReadTool --> BaseTool
+    FileReadTool --> BaseTool
+    WebsiteSearchTool --> BaseTool
+```
+
+### 工具调用机制
+- 智能体按需调用专用工具
+- 工具结果自动集成到工作流
+- 错误处理和重试机制
+
+## 流程控制架构
+
+### Flow 引擎设计
+基于 CrewAI Flow 的流程控制：
+
+**核心流程步骤**:
+```mermaid
+sequenceDiagram
+    participant F as Flow引擎
+    participant C as CloneRepo
+    participant P as PlanDocs
+    participant S as SavePlan
+    participant D as CreateDocs
+    
+    F->>C: 执行仓库克隆
+    C->>P: 触发文档规划
+    P->>S: 保存文档计划
+    P->>D: 触发文档创建
+    D->>F: 返回生成结果
+```
+
+### 错误处理和恢复
+- 每一步的异常捕获和处理
+- 中间状态保存和恢复
+- 重试机制和超时控制
+
+## 输出生成架构
+
+### 文档格式化系统
+**输出管道**:
+```mermaid
+graph LR
+    A[原始内容] --> B[格式转换]
+    B --> C[Mermaid处理]
+    C --> D[代码块格式化]
+    D --> E[链接处理]
+    E --> F[最终MDX]
+```
+
+### 质量保障管道
+- 自动化的语法和格式检查
+- 链接和引用验证
+- 图表语法正确性验证
+- 一致性检查和质量评分
+
+## 扩展性设计
+
+### 插件架构
+**可扩展组件**:
+- 自定义智能体类型
+- 新的分析工具集成
+- 输出格式支持扩展
+- 工作流步骤定制
+
+### API 设计
+**MCP 服务器接口**:
+```mermaid
+classDiagram
+    class MCPServer
+    class DocumentTool
+    
+    MCPServer : +write_documentation()
+    MCPServer : +list_docs()
+    MCPServer : +view_content()
+    MCPServer : +get_help()
+    
+    DocumentTool --> MCPServer
+```
+
+## 性能优化设计
+
+### 资源管理
+- 智能体的并发控制
+- 内存使用优化
+- 模型调用批处理
+- 缓存机制实现
+
+### 可伸缩性
+- 模块化的组件设计
+- 配置驱动的行为调整
+- 资源按需分配
+- 分布式部署支持
+
+这个架构设计确保了系统的高效性、可靠性和可扩展性，能够适应不同规模和复杂度的项目文档生成需求。

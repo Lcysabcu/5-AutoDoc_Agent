@@ -1,0 +1,17 @@
+# python_version >= '3.12'
+
+# CrewAI - 多智能体框架（核心依赖）
+crewai>=0.119.0
+crewai-tools>=0.44.0
+
+# MCP - 模型上下文协议（服务器功能）
+mcp>=1.8.1
+
+# Ollama - 本地模型服务
+ollama>=0.4.8
+
+# Pydantic - 数据验证
+pydantic>=2.11.4
+
+# 开发工具
+ipykernel>=6.29.5
